@@ -80,18 +80,18 @@
 
 **Диаграмма компонентов (Components)**
 
-[Диаграмма компонентов](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_GateServComponent.puml)
-[Диаграмма компонентов](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_HeatingServComponent.puml)
-[Диаграмма компонентов](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_LightServComponent.puml)
-[Диаграмма компонентов](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/%D0%A14_SurvServComponent.puml)
+- [Диаграмма компонентов GateService](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_GateServComponent.puml)
+- [Диаграмма компонентов HeatingService](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_HeatingServComponent.puml)
+- [Диаграмма компонентов LightService](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_LightServComponent.puml)
+- [Диаграмма компонентов SurvService](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/%D0%A14_SurvServComponent.puml)
 
 
 **Диаграмма кода (Code)**
 
-[Диаграмма кода](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_SurvServCode.puml)
+- [Диаграмма кода SurvServCode](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/C4_SurvServCode.puml)
 
 # Задание 3. Разработка ER-диаграммы
 
-[ER диаграмма](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/ErDiagram.puml)
+- [ER диаграмма](https://github.com/AlexeyKnz/architecture-sprint-3/blob/warmhouse/docs/diagrams/micro_serv_diagrams/ErDiagram.puml)
 
 #  ❌ Задание 4. Создание и документирование API
