@@ -1,0 +1,43 @@
+@startuml Управление отоплением с датчиками и термостатом
+
+!include ../C4_diagrams/C4_Container.puml
+!include ../C4_diagrams/C4_Component.puml
+
+Person(user, "Пользователь", "Мобильное приложение/Web")
+Person(support, "Поддержка", "Support Panel")
+
+System_Boundary(system, "Система управления отоплением") {
+    Container(api_gateway, "API Gateway", "Kong/Nginx", "Маршрутизация запросов")
+
+    Container(heating_service, "Heating Service", "Spring Boot", "Основная логика управления") {
+        Component(controller, "API Manager", "Обработка API запросов")
+        Component(thermostat, "Thermostat Manager", "Автоматическое регулирование")
+        Component(sensor_poller, "Sensor Poller", "Опрос датчиков температуры")
+    }
+
+    ContainerDb(postgres, "Heating Service DB", "PostgreSQL", "Состояния систем")
+    ContainerQueue(kafka, "Apache Kafka", "Apache Kafka", "События температуры")
+
+    Container(sensor_adapter, "Sensor Adapter", "gRPC", "Адаптер IoT датчиков")
+    Container(thermostat_device, "Smart Thermostat", "MQTT", "Физическое устройство")
+}
+
+' Связи пользователя
+Rel(user, api_gateway, "HTTPS", "REST API")
+Rel(support, api_gateway, "HTTPS", "Support Panel")
+
+' Внутренние связи
+Rel(api_gateway, heating_service, "HTTP")
+Rel(heating_service, postgres, "JDBC", "CRUD операций")
+Rel(heating_service, kafka, "События", "heating.events")
+
+' Связи с устройствами
+Rel(sensor_poller, sensor_adapter, "gRPC", "Запрос данных", "Каждые 30 сек")
+Rel(sensor_adapter, thermostat_device, "MQTT", "Чтение показаний")
+Rel(thermostat, thermostat_device, "MQTT", "Управление", "Установка температуры")
+
+' Обратные связи
+Rel(kafka, thermostat, "Команды", "thermostat.commands")
+Rel(sensor_adapter, kafka, "Показания", "sensor.updates")
+
+@enduml

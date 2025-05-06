@@ -1,0 +1,68 @@
+@startuml Полная архитектура умного дома с Kafka
+
+!include  ../C4_diagrams/C4_Container.puml
+
+Person(user, "Пользователь", "Мобильное приложение/Web")
+Person(support, "Поддержка", "Support Panel")
+
+System_Boundary(system, "Умный дом") {
+     Container(api_gateway, "API Gateway", "Kong/Nginx", "Маршрутизация запросов")
+     Container(heating, "Heating Service", "Java (Spring Boot)", "Управление котлами")
+     Container(lighting, "Lighting Service", "Java (Spring Boot)", "Лампы/выключатели")
+     Container(gate, "Gate Service", "Java (Spring Boot)", "Ворота/шлагбаумы")
+     Container(cctv, "Surveillance Service", "Java (Spring Boot)", "Камеры/детекция")
+     Container(device_registry, "Device Registry", "Java", "Регистрация устройств")
+     Container(user_profile, "User Profile", "React", "Управление профилями")
+     ContainerQueue(kafka, "Apache Kafka", "Брокер сообщений", "Обработка событий в реальном времени")
+     Container(auth, "Auth Service", "React", "Аутентификация/авторизация")
+     Container(dataproc, "DataProcessor Service", "C++/Java", "Обработка данных")
+
+     System_Boundary(notification_analytics, "Нотификация и аналитика") {
+        Container(analytics, "Analytics Service", "Python", "Производительность и аналитика")
+        Container(notif, "Notification Service", "Node.js", "Уведомления")
+     }
+
+
+     ContainerDb(heatingDB, "Heating Service DB", "PostgreSQL")
+     ContainerDb(lightingDB, "Lighting Service DB", "PostgreSQL")
+     ContainerDb(gateDB, "Gate Service DB", "PostgreSQL")
+     ContainerDb(cctvDB, "Surveillance Service DB", "PostgreSQL")
+     ContainerDb(device_registryDB, "Device Registry DB", "PostgreSQL")
+     ContainerDb(user_profileDB, "User Profile DB", "PostgreSQL")
+}
+
+' Пользовательские подключения
+Rel(user, api_gateway, "HTTPS", "Mobile App")
+Rel(support, api_gateway, "HTTPS", "Admin Panel")
+
+' API Gateway -> Сервисы
+Rel(api_gateway, lighting, "REST")
+Rel(api_gateway, heating, "REST")
+Rel(api_gateway, gate, "REST")
+Rel(api_gateway, auth, "REST")
+Rel(api_gateway, cctv, "REST")
+Rel(api_gateway, device_registry, "REST")
+Rel(api_gateway, user_profile, "REST")
+Rel(api_gateway, cctv, "REST")
+
+' Сервисы -> БД
+Rel(heating, heatingDB, "SQL")
+Rel(lighting, lightingDB, "SQL")
+Rel(gate, gateDB, "SQL")
+Rel(cctv, cctvDB, "SQL")
+Rel(device_registry, device_registryDB, "SQL")
+Rel(user_profile, user_profileDB, "SQL")
+
+' Взаимодействие через Kafka
+Rel(device_registry, kafka, "Добавление устройства", "device_registry.events")
+Rel(heating, kafka, "События температуры", "heating.events")
+Rel(lighting, kafka, "События освещения", "lighting.events")
+Rel(gate, kafka, "События ворот", "gate.events")
+Rel(cctv, kafka, "События безопасности", "surveillance.events")
+Rel(auth, kafka, "События Аутентификация/авторизации", "auth.events")
+Rel(kafka, analytics, "Все события")
+Rel(kafka, notif, "")
+Rel(notif, user, "Достижение необходимой температуры и тд")
+Rel(kafka, dataproc, "Events")
+Rel(dataproc, kafka, "Обработанные данные, формирует полное состояние системы", processed.events)
+@enduml

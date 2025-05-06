@@ -1,0 +1,45 @@
+@startuml Управление автоматическими воротами
+
+!include ../C4_diagrams/C4_Container.puml
+!include ../C4_diagrams/C4_Component.puml
+
+Person(user, "Пользователь", "Мобильное приложение/Web")
+Person(support, "Поддержка", "Support Panel")
+
+System_Boundary(gate_system, "Система управления воротами") {
+    Container(api_gateway, "API Gateway", "Kong/Nginx", "Маршрутизация запросов")
+
+    Container(gate_service, "Gate Service", "Spring Boot", "Основная логика управления") {
+        Component(controller, "API Manager", "Обработка API запросов")
+        Component(gate_control, "Gate Controller", "Управление состоянием ворот")
+        Component(safety_monitor, "Safety Monitor", "Контроль безопасности")
+    }
+
+    ContainerDb(postgres, "Gate Service DB", "PostgreSQL", "Состояния и логи")
+    ContainerQueue(kafka, "Message Broker", "Apache Kafka", "События безопасности")
+
+    Container(gate_adapter, "Gate Adapter", "gRPC", "Адаптер устройств")
+    Container(gate_device, "Smart Gate", "Modbus/RS-485", "Физическое устройство")
+    Container(sensor_array, "Safety Sensors", "Zigbee", "Датчики препятствий")
+}
+
+' Связи пользователей
+Rel(user, api_gateway, "HTTPS", "REST API")
+Rel(support, api_gateway, "HTTPS", "Support Panel")
+
+' Внутренние связи
+Rel(api_gateway, gate_service, "HTTP")
+Rel(gate_service, postgres, "JDBC", "CRUD операций")
+Rel(gate_service, kafka, "События", "gate.events")
+
+' Связи с устройствами
+Rel(gate_control, gate_adapter, "gRPC", "Команды управления")
+Rel(gate_adapter, gate_device, "Modbus", "Открыть/Закрыть")
+Rel(safety_monitor, sensor_array, "Zigbee", "Мониторинг датчиков")
+
+' Обратные связи
+Rel(kafka, gate_control, "Команды", "gate.commands")
+Rel(gate_adapter, kafka, "Статус", "gate.status")
+Rel(sensor_array, kafka, "Препятствия", "safety.alerts")
+
+@enduml
