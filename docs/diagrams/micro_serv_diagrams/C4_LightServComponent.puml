@@ -1,0 +1,45 @@
+@startuml Управление освещением в умном доме
+
+!include ../C4_diagrams/C4_Container.puml
+!include ../C4_diagrams/C4_Component.puml
+
+Person(user, "Пользователь", "Мобильное приложение/Web")
+Person(support, "Поддержка", "Support Panel")
+
+System_Boundary(lighting_system, "Система управления освещением") {
+    Container(api_gateway, "API Gateway", "Kong/Nginx", "Маршрутизация запросов")
+
+    Container(lighting_service, "Lighting Service", "Spring Boot", "Основная логика управления") {
+        Component(controller, "API Manager", "Обработка API запросов")
+        Component(light_control, "Light Controller", "Управление световыми группами")
+        Component(ambient_manager, "Ambient Manager", "Адаптация к внешнему освещению")
+    }
+
+    ContainerDb(postgres, "Lighting DB", "PostgreSQL", "Состояния и настройки")
+    ContainerQueue(kafka, "Apache Kafka", "Apache Kafka", "События освещения")
+
+    Container(zigbee_adapter, "Zigbee Adapter", "MQTT", "Мост Zigbee-MQTT")
+    Container(light_devices, "Умные лампы", "Zigbee", "Philips Hue, Aqara и др.")
+    Container(motion_sensors, "Датчики движения", "Zigbee", "Датчики присутствия")
+}
+
+' Связи пользователей
+Rel(user, api_gateway, "HTTPS", "REST API")
+Rel(support, api_gateway, "HTTPS", "Support Panel")
+
+' Внутренние связи
+Rel(api_gateway, lighting_service, "HTTP")
+Rel(lighting_service, postgres, "JDBC", "CRUD операций")
+Rel(lighting_service, kafka, "События", "lighting.events")
+
+' Связи с устройствами
+Rel(light_control, zigbee_adapter, "MQTT", "Команды управления")
+Rel(zigbee_adapter, light_devices, "Zigbee", "Вкл/Выкл, яркость")
+Rel(ambient_manager, motion_sensors, "Zigbee", "Данные освещенности")
+
+' Обратные связи
+Rel(kafka, light_control, "Команды", "lighting.commands")
+Rel(zigbee_adapter, kafka, "Статус", "light.status")
+Rel(motion_sensors, kafka, "Движение", "motion.events")
+
+@enduml

@@ -1,0 +1,80 @@
+@startuml Surveillance Service - Code Level
+
+skinparam class {
+    BackgroundColor #F9F9F9
+    ArrowColor #0078D4
+    BorderColor #005A9E
+}
+
+class SurveillanceController {
+  + startStream(cameraId: String): StreamSession
+  + searchArchive(params: SearchParams): List<Recording>
+  + configureMotionDetection(config: DetectionConfig)
+}
+
+class StreamManager {
+  - activeSessions: Map<String, StreamSession>
+  + createSession(camera: Camera): StreamSession
+  + terminateSession(sessionId: String)
+}
+
+class StreamSession {
+  - sessionId: String
+  - camera: Camera
+  - status: StreamStatus
+  + getWebRTCConnection(): WebRTCChannel
+  + getRTSPEndpoint(): String
+}
+
+class MotionAnalyzer {
+  - processor: AIClient
+  + analyzeFrame(frame: VideoFrame): DetectionResult
+  + configureSensitivity(level: int)
+}
+
+class AIClient {
+  + detectObjects(frame: VideoFrame): DetectionResult
+  + recognizeFaces(frame: VideoFrame): List<FaceMatch>
+}
+
+class StorageManager {
+  - storage: S3Client
+  + saveRecording(session: StreamSession)
+  + searchRecordings(params: SearchParams): List<Recording>
+}
+
+class Camera {
+  + id: String
+  + rtspEndpoint: String
+  + status: CameraStatus
+  + getLiveStream(): VideoStream
+}
+
+class VideoFrame {
+  + timestamp: Instant
+  + data: byte[]
+  + metadata: FrameMeta
+}
+
+class DetectionResult {
+  + hasMotion: boolean
+  + objects: List<DetectedObject>
+  + faces: List<FaceMatch>
+}
+
+' Связи
+SurveillanceController --> StreamManager : uses
+SurveillanceController --> MotionAnalyzer : configures
+SurveillanceController --> StorageManager : queries
+
+StreamManager --> StreamSession : creates
+StreamManager --> Camera : accesses
+
+MotionAnalyzer --> AIClient : delegates to
+MotionAnalyzer ..> VideoFrame : processes
+MotionAnalyzer ..> DetectionResult : produces
+
+StorageManager --> StreamSession : archives
+StorageManager ..> Recording : manages
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml Система видеонаблюдения умного дома
+
+!include ../C4_diagrams/C4_Container.puml
+!include ../C4_diagrams/C4_Component.puml
+
+Person(user, "Пользователь", "Мобильное приложение")
+Person(security, "Служба безопасности", "Мониторинг(если есть такая услуга)")
+
+System_Boundary(surveillance_system, "Система видеонаблюдения") {
+    Container(api_gateway, "API Gateway", "Kong", "Маршрутизация потоков")
+
+    Container(surveillance_service, "Surveillance Service", "Python/Go", "Обработка видео") {
+        Component(stream_manager, "Stream Manager", "Управление потоками")
+        Component(motion_detector, "Motion Detector", "Анализ движения")
+        Component(face_recognition, "Face Recognition", "Распознавание лиц")
+        Component(storage_manager, "Storage Manager", "Управление записями")
+    }
+
+    ContainerDb(metadata_db, "Surveillance Service DB", "PostgreSQL", "Метаданные записей")
+    ContainerDb(objects_db, "Objects DB", "Redis", "Кеш распознанных объектов")
+    ContainerQueue(kafka, "Apache Kafka", "Apache Kafka", "События безопасности")
+
+    Container(rtsp_gateway, "RTSP Gateway", "C++", "Транскодирование потоков")
+    Container(nvr, "NVR Storage", "MinIO", "Хранение записей")
+    Container(cameras, "IP Камеры", "ONVIF", "Hikvision/Dahua")
+    Container(ai_processor, "AI Accelerator", "NVIDIA Jetson", "Обработка на edge")
+}
+
+' Связи пользователей
+Rel(user, api_gateway, "HTTPS/WebRTC", "Просмотр потоков")
+Rel(security, api_gateway, "HTTPS", "Экспорт записей")
+
+' Внутренние связи
+Rel(api_gateway, surveillance_service, "gRPC", "Управление")
+Rel(surveillance_service, metadata_db, "SQL", "Метаданные")
+Rel(surveillance_service, objects_db, "Redis Protocol", "Объекты")
+Rel(surveillance_service, kafka, "События", "security.events")
+
+' Связи с устройствами
+Rel(stream_manager, rtsp_gateway, "RTSP", "Видеопотоки")
+Rel(rtsp_gateway, cameras, "ONVIF", "Управление камерами")
+Rel(motion_detector, ai_processor, "gRPC", "Анализ кадров")
+Rel(storage_manager, nvr, "S3 API", "Архивирование")
+
+' Обратные связи
+Rel(kafka, surveillance_service, "Триггеры записи", "record.commands")
+Rel(cameras, kafka, "Детекция движения", "motion.detected")
+Rel(ai_processor, kafka, "Распознанные объекты", "objects.detected")
+
+@enduml

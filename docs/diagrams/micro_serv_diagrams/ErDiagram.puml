@@ -1,0 +1,82 @@
+@startuml ER-диаграмма умного дома
+
+hide circle
+skinparam linetype ortho
+
+entity "User" {
+  + id [PK]
+  --
+  email: varchar(255) [UK]
+  password_hash: varchar(255)
+  phone: varchar(20)
+  role: enum('SUPPORT','HOME_OWNER','SECURITY_TEAM')
+  created_at: timestamp
+}
+
+entity "House" {
+  + id [PK]
+  --
+  address: text
+  owner_id [FK -> User]
+  timezone: varchar(50)
+  security_level: enum('BASIC','ADVANCED')
+}
+
+entity "DeviceType" {
+  + id [PK]
+  --
+  name: varchar(50) (THERMOSTAT,CAMERA,GATE,LIGHT)
+  protocol: enum('ZIGBEE','MQTT','MODBUS')
+  capabilities: json
+}
+
+entity "Device" {
+  + id [PK]
+  --
+  type_id [FK -> DeviceType]
+  house_id [FK -> House]
+  serial_number: varchar(64) [UK]
+  status: enum('ONLINE','OFFLINE','ERROR')
+  last_heartbeat: timestamp
+  configuration: json
+}
+
+entity "TelemetryData" {
+  + id [PK]
+  --
+  device_id [FK -> Device]
+  timestamp: timestamp
+  metric_type: enum('TEMPERATURE','POWER','MOTION')
+  value: float
+  raw_data: json
+}
+
+entity "Notification" {
+  + id [PK]
+  --
+  user_id [FK -> User]
+  message: text
+  type: enum('ALERT','INFO','WARNING')
+  created_at: timestamp
+  is_read: boolean
+}
+
+entity "Event" {
+  + id [PK]
+  --
+  device_id [FK -> Device]
+  event_type: varchar(50)
+  payload: json
+  created_at: timestamp
+}
+
+' Связи
+User ||--o{ House : owns
+House ||--o{ Device : contains
+DeviceType ||--o{ Device : classifies
+Device ||--o{ TelemetryData : generates
+Device ||--o{ Event : produces
+User ||--o{ Notification : receives
+
+
+@enduml
